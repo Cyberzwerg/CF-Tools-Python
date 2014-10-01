@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #Import dependencies
 import socket,hashlib,sys,time,datetime
 
