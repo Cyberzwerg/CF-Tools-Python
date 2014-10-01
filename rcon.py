@@ -1,5 +1,5 @@
 #Import dependencies
-import socket,hashlib,sys,time
+import socket,hashlib,sys,time,datetime
 
 ###
 #	RCON CLASS VERSION 0.0.2
@@ -42,7 +42,8 @@ class RCON:
 		
 		try:
 			#Get the welcome message
-			welcomeMessage =  self.socket.recv(1024)
+			welcomeMessage =  self.socket.recv(1024).split(" ")
+			self.rconVersion = welcomeMessage[7]
 			#Get the seed which is then digested
 			seed =  self.socket.recv(1024).replace("\n","").split(":")[1][1:]
 
@@ -95,12 +96,6 @@ class RCON:
 				return False
 
 		except:
-			# Server returned nothing / socket lost connection
-
-			#Starting over
-
-			self.connect()
-
 			return False
 		return response 
 
@@ -111,6 +106,9 @@ class RCON:
 	def getPlayers(self):
 		return self.query("bf2cc pl")
 	
+	##########################################
+	#Get server Details
+	##########################################	
 	def getServerDetails(self):
 		preServerDetails = self.query("bf2cc si")
 		#Check if we can split up
@@ -125,9 +123,9 @@ class RCON:
 						"autobalance": int(preServerDetails[24]),
 					},
 					"map": {
-						"name": preServerDetails[5],
-						"mode": preServerDetails[20],
-						"round": preServerDetails[31],
+						"name": self.convertMapToCamelCase(preServerDetails[5],preServerDetails[20]) ,
+						"round": preServerDetails[31].replace("\n",""),
+						"roundsPerMap": self.getRoundsPerMap(),
 						"timeElapsed": preServerDetails[18],
 					},
 					"players": {
@@ -154,8 +152,18 @@ class RCON:
 
 	#Get the current chat Buffer
 	def getChat(self):
-		return self.query("bf2cc serverchatbuffer")
-
+		finalChat = { 'admin': [] , 'player': []}
+		chat = self.query("bf2cc serverchatbuffer").split("\r\r")
+		for message in chat:
+			message = message.split("\t")
+			thisMessage = {}
+			if len(message) == 6:
+				message = { 'slot': message[0].replace("\n",""), 'origin': message[1] , 'time': message[4].replace("[","").replace("]",""), 'message': message[1] }
+				if message['origin'] == "Admin":
+					finalChat['admin'].append(message)
+				else:
+					finalChat['player'].append(message)
+		return finalChat
 
 	#Get vips
 	#Mode profileKey|Name
@@ -187,42 +195,168 @@ class RCON:
 		self.query("exec sv.save")
 		self.query("exec sv.load")
 	
-	#Restart Server (30 seconds)
-	def restartServer(self):
-		self.saveSettings()
-		return self.query("exec exit")
+	####################
+	##  CHAT  METHODS ##
+	####################
 	#Send global chat
-
 	def sendChat(self,message):
 		return self.query('exec game.sayAll " |ccc| '+message+'"')
 	#Send private Chat by slot.
 	def sendChatPrivateByID(self,slot,message):
 		return self.query('exec game.sayToPlayerWithId '+slot+' \" |ccc| '+message+'\"',1024,0)
-
+	
 	#Kick player instantly
-	def kickPlayerBySlotNow(self,slot):
+	def kickPlayerInstant(self,slot):
 		return self.query('exec admin.kickPlayer '+slot)
+	#Send a message to one team
+	def sendTeamChat(self,team,message):
+		return self.query('exec game.sayTeam '+team+' '+message)
 
-
+	####################
+	##UTILITLY METHODS##
+	####################
 	#Get banner url
 	def getBannerUrl(self):
 		return self.query('exec sv.bannerURL')
-	# Get current map ID
-	def getCurrentMapID(self):
-		return self.query('exec maplist.currentMap')
-	# Restart current Map
-	def restartMap(self):
-		return self.query("exec admin.restartMap")
-
+	
+	#Restart Server (30 seconds)
+	def restartServer(self):
+		self.saveSettings()
+		self.query("exec exit")
+		time.sleep(31)
+		return True
 	# Pause server (ranked only)
 	def pauseServer(self):
 		return self.query('bf2cc pause')
 	# Resume server (unranked only)
 	def resumeServer(self):
 		return self.query('bf2cc unpause')
+	#Get autobalance status
+	def getAutoBalanceStatus(self):
+		if int(self.query("exec sv.autoBalanceTeam")) == 1:
+			return True
+		else:  
+			return False
+	#Get ranked status
+	def getRankedStatus(self):
+		if int(self.query("exec sv.ranked")) == 1:
+			return True
+		else:  
+			return False
 
-	
+	####################
+	##  MAP ROTATION  ##
+	####################
+	# Restart current Map
+	def restartMap(self):
+		return self.query("exec admin.restartMap")
 
+	def appendMap(self,map,size=32):
+		realMap = self.convertCamelCaseToMap(map)
+		self.query('exec mapList.append '+realMap['map']+' '+realMap['mode']+' '+str(size))
+		return True
+	# Get current map ID
+	def getNextUpMap(self):
+		serverDetails = self.getServerDetails()
+		if serverDetails['map']['round'] == serverDetails['map']['roundsPerMap']:
+			return self.getNextMapInRotation()
+		else:
+			return serverDetails['map']['name']
+	#Get how many rounds are played per map
+	def getRoundsPerMap(self):
+		return int(self.query("exec sv.roundsPerMap"))
+	#Get current map index in map list
+	def getCurrentMapID(self):
+		return int(self.query('exec maplist.currentMap'))
+	#Get map rotation
+	def getCurrentMapRotation(self):
+		finalMapRotation = []
+		for map in self.query('exec maplist.list').split("\n"):
+			if len(map) > 0:
+				map     = map.split(":")
+				id      = int(map[0])
+				map     = map[1].replace(' \" ',"").split(" ")
+				mapName = self.convertMapToCamelCase(map[1], map[2])
+				size    = map[3]
+				finalMapRotation.append({ "id": id , "mapName": mapName  , "size": size})
+
+		return finalMapRotation
+	#Get current Map
+	def getCurrentMap(self):
+		currentMapID = self.getCurrentMapID()
+		for map in self.getCurrentMapRotation():
+			if map['id'] == currentMapID:
+				return map
+	#Get next map in map rotation
+	def getNextMapInRotation(self):
+		currentMapID = self.getCurrentMapID()+1
+		for map in self.getCurrentMapRotation():
+			if map['id'] == currentMapID:
+				return map
+	#Convert camelCase map model to p4f model
+	def convertCamelCaseToMap(self,map):
+		finalMap = {}
+		if "rush" in map:
+			finalMap['mode'] = "gpm_rush"
+		else: 
+			finalMap['mode'] = "gpm_sa"
+		if "sharqi" in map:
+			finalMap['map'] = "sharqi"
+		elif "karkand" in map:
+			if "rush" in map:
+				finalMap['map'] = "karkand_rush"
+			else:
+				finalMap['map'] = "strike_at_karkand"
+		elif "myanmar" in map:
+			finalMap['map'] = "trail"
+		elif "oman" in map:
+			finalMap['map'] = "gulf_of_oman"		
+		elif "mashtuur" in map:
+			finalMap['map'] = "mashtuur_city"
+		elif "dragon" in map:
+			finalMap['map'] = "dragon_valley"
+		elif "basra" in map:
+			finalMap['map'] = "downtown"
+		elif "dalian" in map:
+			if "rush" in map:
+				finalMap['map'] = "dalian_rush"
+			else:
+				finalMap['map'] = "dalian"	
+		return finalMap			
+	# Convert ugly play4free map names to camelCase
+	def convertMapToCamelCase(self,map,mode):
+		
+		if "gpm_rush" in mode:
+			gameMode = "Rush"
+		elif "gpm_sa" in mode:
+			gameMode = "Assault"
+		else:
+			return map+"-"+mode
+		map = map.lower()
+
+		if "sharqi" in  map:
+			finalMap = "sharqi"
+
+		elif "karkand" in map:
+			finalMap = "karkand"
+
+		elif "trail" in map:
+			finalMap = "myanmar"
+
+		elif "oman" in map:
+			finalMap = "oman"
+
+		elif "mashtuur" in map:
+			finalMap = "mashtuur"
+
+		elif "dragon" in map:
+			finalMap = "dragonValley"
+		elif "dalian" in map:
+			finalMap = "dalian"
+		else:
+			return map+"-"+mode
+		return finalMap+gameMode
+	# Do an awesome map restart (unranked only)
 	def awesomeRestart(self):
 		self.sendChat("CF-Tools awesome restart started")
 		self.restartMap()
