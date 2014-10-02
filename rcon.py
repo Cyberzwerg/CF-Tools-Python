@@ -40,12 +40,12 @@ class RCON:
 
 		#Set timeout of socket. This is used to prevent the program from getting stuck when server is responding with nothing
 
-		self.socket.settimeout(2)
+		self.socket.settimeout(0.2)
 		
 		try:
 			#Get the welcome message
 			welcomeMessage =  self.socket.recv(1024).split(" ")
-			self.rconVersion = welcomeMessage[7]
+			self.rconVersion = welcomeMessage[7].replace("\n","")
 			#Get the seed which is then digested
 			seed =  self.socket.recv(1024).replace("\n","").split(":")[1][1:]
 
@@ -79,7 +79,7 @@ class RCON:
 
 			self.connect()
 		#At this point RCON is ready.
-	
+		print "Connected to "+self.connectionInfo['ip']+":"+str(self.connectionInfo['port'])+" RCON version "+self.rconVersion+" ready"
 	##########################################
 	#Main Query method
 	##########################################
@@ -205,7 +205,7 @@ class RCON:
 		return self.query('exec game.sayAll " |ccc| '+message+'"')
 	#Send private Chat by slot.
 	def sendChatPrivateByID(self,slot,message):
-		return self.query('exec game.sayToPlayerWithId '+slot+' \" |ccc| '+message+'\"',1024,0)
+		return self.query('exec game.sayToPlayerWithId '+str(slot)+' \" |ccc| '+str(message)+'\"',1024,0)
 	
 	#Kick player instantly
 	def kickPlayerInstant(self,slot):
