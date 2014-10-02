@@ -33,4 +33,10 @@ Requirements
 Python 2
 
 
+Known Attributes
+----------------
+ **CPU Usage**  is very low (not displayable on windows)
+ **RAM Usage**  is very low (around 4kb)
+ **CYCLE SPEED** is around 110ms (sleeps 1s afterwards)
+ 
 
