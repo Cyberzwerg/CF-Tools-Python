@@ -8,23 +8,23 @@ There are a few features included (which aren't uploaded yet).
 Roadmap
 -------
 
-*Weapon limiter (prebuy/forbidden/#per team)
-*Class limiter
-*Ingame cmds (with hooks for new cmds)
-*Ping limiter
-*Level limiter
-*T4G Integration
-*Ban system
-*Logs(kick,chat,join,debug)
+* Weapon limiter (prebuy/forbidden/#per team)
+* Class limiter
+*  Ingame cmds (with hooks for new cmds)
+* Ping limiter
+* Level limiter
+* T4G Integration
+* Ban system
+* Logs(kick,chat,join,debug)
 
 Done features
 --------------
-*Join message
-*Player detection
-*Ranks
-*Clan tag detection
-*Kick System
-*Loading finished detection
+* Join message
+* Player detection
+* Ranks
+* Clan tag detection
+* Kick System
+* Loading finished detection
 
 
 Requirements
