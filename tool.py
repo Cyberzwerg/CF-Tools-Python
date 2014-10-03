@@ -16,131 +16,61 @@
 #     You should have received a copy of the GNU General Public License along
 #     with this program; if not, write to the Free Software Foundation, Inc.,
 #     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-import os,time,threading,urllib,json,util,rcon # <---  RCON CLASS
-global toolConfig,currentFetched,toBeFetched,chatBuffer,adminChatBuffer
-print "██████████████████████████████████████████████████████████████████████████████████████████████████████████████████"
-print "█																											 	 █"
-print "█  ██████╗███████╗     █████╗ ██╗   ██╗████████╗ ██████╗ ██╗  ██╗██╗ ██████╗██╗  ██╗    ██████╗ ██╗  ██╗███████╗ █"
-print "█ ██╔════╝██╔════╝    ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗██║ ██╔╝██║██╔════╝██║ ██╔╝    ██╔══██╗██║  ██║██╔════╝ █"
-print "█ ██║     █████╗      ███████║██║   ██║   ██║   ██║   ██║█████╔╝ ██║██║     █████╔╝     ██████╔╝███████║█████╗   █"
-print "█ ██║     ██╔══╝      ██╔══██║██║   ██║   ██║   ██║   ██║██╔═██╗ ██║██║     ██╔═██╗     ██╔═══╝ ╚════██║██╔══╝   █"
-print "█ ╚██████╗██║         ██║  ██║╚██████╔╝   ██║   ╚██████╔╝██║  ██╗██║╚██████╗██║  ██╗    ██║          ██║██║      █"
-print "█  ╚═════╝╚═╝         ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝    ╚═╝          ╚═╝╚═╝      █"
-print "█																										 		 █"    
-print "██████████████████████████████████████████████████████████████████████████████████████████████████████████████████"
-#Dat fancy text-art
 
-toolConfig = {
-	"id":  0,
-	"connectionInfo": {
-		'ip': "RCON IP",
-		'port': RCON PORT,
-		'password': 'RCON PW',
-		'serverName': "Servername will go here"
-	},
-	"maxPing": 350,
-	"vipProtections": { 
+import sys,os,time,threading,urllib,json
 
-		'levelLimiter'         : False ,
-
+import util # <---  UTIL MODULE
+import rcon # <---  RCON MODULE
+import limiters
+global toolConfig,currentFetched,toBeFetched,chatBuffer,adminChatBuffer,configName
+configName = ""
+##
+##	YOU CAN DETERMINE THE USED CONFIG FROM THE toolConfig.json BY using python tool.py -c <configName>
+##
+configName = "server1"
+if len(sys.argv) > 1:
+	if sys.argv[1] == "-c":
+		configName = sys.argv[2]	
 		
-		'forbiddenAttachements': False ,
-		'preboughtAttachements': False ,
-
-		'forbiddenWeapons'     : False ,
-		'preboughtWeapons'     : False ,  
-
-
-		'pingLimiter'          : False ,  
-
-		'classLimiter'         : True  ,  
-	},
-	"joinMessage":  "%NAME%, welcome on %SERVERNAME%! Please read the rules",
-	"statsMessage": " |ccc| Hello /tags/  |ccc|  /name/  |ccc| , Kills |ccc| /kills/ |ccc| || Deaths |ccc| /deaths/ |ccc| || Your K/D Ratio |ccc| /KD/ |ccc|  || Ping: |ccc| /pingAvg/ |ccc| || Have fun playing.",
-	"ingameCmds": {
-		"test"  : { "action":"sayPrivate", "requiredRights": "50" , "text": "Some defined text 2"   }, 
-		"b"     : { "action":"banPlayer" , "requiredRights": "50" , "text": "Some defined text 2"   }, 
-		"ping"  : { "action":"printPing" , "requiredRights":  "0" 									}, 
-		"k"     : { "action":"kickPlayer", "requiredRights":  "0"  									}, 
-		"tomato": { "action":"sayPublic" , "requiredRights": "50" , "text": "######################"},
-		"exit"  : { "action": "exitTool" , "requiredRights": "75"									}
-	},
-	"ranks" : {
-	 "2851071969": 50 
-	},
-	"clanTagDetection": [
-		["(",")"],
-		["[","]"],
-		["-","-"],
-		["{","}"],
-		["=","="],
-	],
-	"kickSystem": {
-		"kickDelay": 3
-	},
-	"weaponLimiter": {
-		'prebuyProtection' : {
-			'weapons': [],
-			'attachments': [],
-			'tolerance': 0
-		},
-		'forbiddenItems' : {
-			'weapons': [],
-			'attachments': [],
-		}
-	},
-	"classLimiter": {
-		'current': {
-			'US': {
-				"Recon": [], 
-				"Medic": [], 
-				"Engineer": [], 
-				"Assault": [], 
-			},
-			'RU': {
-				"Recon": [], 
-				"Medic": [], 
-				"Engineer": [], 
-				"Assault": [], 
-			},
-		},
-		'max': {
-				"Recon": 16, 
-				"Medic": 16, 
-				"Engineer": 16, 
-				"Assault": 16, 
-		}
-	},
-	"levelLimiter": {
-		"maxlevel" : 30,
-		"minlevel" : -1
-	},
-	"bans" : [
-		{ "profileID": 00000000000, "reason": "ban reason" , "expires": 1410380262 , "by": "some Admin" , "type": "Ingame" },
-	],
-
-}
+#Loading config
+try:
+	json_data=open("toolConfig.json").read()
+	toolConfig = json.loads(json_data)[configName]
+except:
+	print "Configuration file corrupted."
+####
+#### INITITIALIZATION OF GLOBAL VARS
+####
 
 currentFetched = {}
 toBeFetched = {}
 chatBuffer = []
 adminChatBuffer = []
 
+####
+#### CORE CLASS ITERATING OVER PLAYERS
+####
+
 class fetchPlayers(threading.Thread):
 	def __init__(self): 
 		threading.Thread.__init__(self) 
 		self.firstRun = True 
-		self.iterationCount = 0
 		self.debug = False
 		self.rcon = rcon.RCON(toolConfig["connectionInfo"])
 		self.Support = rcon.Support()
 		self.running = True
+
+		self.classLimiter = limiters.classLimiter(toolConfig['classLimiter'],toolConfig['vipProtections']['classLimiter'])
+
+		self.levelLimiter = limiters.levelLimiter(toolConfig['levelLimiter'],toolConfig['vipProtections']['levelLimiter'])
+
 	###############################
 	#  PLAYER UTILITY FUNCTIONS   #
 	###############################
 	def replaceWithToolVars(self,player,string):
-		print string
 		string = string.replace("%KILLS%",str(player['game']['kills']))
+		string = string.replace("%KD%",str(player['game']['KD']))
+		string = string.replace("%TAGS%",str(player['profile']['tags']))
 		string = string.replace("%DEATHS%",str(player['game']['deaths']))
 		string = string.replace("%SCORE%",str(player['game']['score']))
 		string = string.replace("%PING%",str(player['ping']['current']))
@@ -151,7 +81,7 @@ class fetchPlayers(threading.Thread):
 		string = string.replace("%PROFILEID%",str(player['profile']['profileID']))
 		string = string.replace("%RANK%",str(player['profile']['rank']))
 		string = string.replace("%CLANTAG%",str(player['profile']['clanTag']))
-		string = string.replace("%SERVERNAME%",toolConfig['connectionInfo']['serverName'])
+		string = string.replace("%SERVERNAME%",self.rcon.serverName)
 		return string
 	def willCheck(self,limiter,vipStatus):
 		if  toolConfig["vipProtections"][limiter] == True:
@@ -165,15 +95,21 @@ class fetchPlayers(threading.Thread):
 	#   "EVENT HANDLERS" BELOW   #
 	##############################
 	def onPlayerDisconnect(self,player):
-		pass
+		print player['profile']['name']+" left"
+		self.classLimiter.removePlayer(player)
+		
 	def onLoadoutReceived(self,player):
 		pass
 	def onPlayerFinishedLoading(self,player):
+		self.classLimiter.checkPlayer(player)
+		self.levelLimiter.checkPlayer(player)
 		self.rcon.sendChatPrivateByID(player['profile']['slot'],self.replaceWithToolVars(player,toolConfig['joinMessage']))
 	def onPlayerKicked(self,player):
 		pass
-	
 	def run(self):
+
+		print "Running core Player daemon"
+
 		while self.running  == True:
 			startTime = time.clock()
 			self.referenceTime = int(time.time())
@@ -183,11 +119,8 @@ class fetchPlayers(threading.Thread):
 				for player in prePlayers:
 					player = player.split("\t")
 					if len(player) == 48:
-						if not player[47] in currentFetched:
-							if "US" in player[34]:
-								team = "US"
-							else:
-								team = "RU"
+						if not int(player[47]) in currentFetched:
+							
 							resultClanName = "none"
 							for clanTag in toolConfig['clanTagDetection']:
 								if player[1][0] == clanTag[0]:
@@ -198,36 +131,29 @@ class fetchPlayers(threading.Thread):
 										print player[1]+" has clanTag "+clanName
 									else:
 										resultClanName = "none"
-							if "Assault" in player[34]:
-								playerClass = "Assault"
-							elif "Recon" in player[34]:
-								playerClass = "Recon"
-							elif "Medic" in player[34]:
-								playerClass = "Medic"
-							elif "Engineer" in player[34]:
-								playerClass = "Engineer"
-							else:
-								playerClass = "Unknown"
+							tags = ""
 							if player[35] == "0":
 								vip =  False
-								rights = 0
 							else:
 								vip = True
-								rights = 10
-							for person in toolConfig["ranks"]:
-								if int(player[47]) == person:
-									rights = rights+toolConfig["ranks"][person]
-							currentFetched[player[47]] = {
+								tags = "[VIP]"
+							rights = 0
+							for group in toolConfig['ingameRights']:
+								if str(player[47]) in toolConfig['ingameRights'][group]['members']:
+									rights = int(toolConfig['ingameRights'][group]['rights'])
+									tags = tags+"["+toolConfig['ingameRights'][group]['tag']+"]"
+							currentFetched[int(player[47])] = {
 								"profile": {
 									"profileID": int(player[47]),
 									"nucleusID": int(player[10]),
 									"name": player[1],
 									"slot": int(player[0]),
 									"rank": int(player[39]),
-									"class": playerClass,
+									"class": "loading",
 									"rights": rights,
 									"clanTag": resultClanName,
-									"vip": vip
+									"vip": vip,
+									"tags": tags
 
 								},
 								"time": {
@@ -245,7 +171,7 @@ class fetchPlayers(threading.Thread):
 									"flagCaps": int(player[25]),
 									"assists": int(player[19]),
 									"revives": int(player[22]),
-									"team": team
+									"team": "loading"
 								},
 								"ping": {
 									"current": int(player[3]),
@@ -262,10 +188,13 @@ class fetchPlayers(threading.Thread):
 								"kickStatus": False,
 								"kickTime": 0,
 								"kickReason": "You are being kicked! F0 o l"
-							}	
+							}
+							toBeFetched[int(player[47])] = fetchPlayerData(int(player[47]),int(player[10]))
+							toBeFetched[int(player[47])].setDaemon(True)
+							toBeFetched[int(player[47])].start()
 						else:
-							playerInMemory = currentFetched[player[47]]
-
+							playerInMemory = currentFetched[int(player[47])]
+							
 							######################################
 							# Check if player is in kickin phase #
 							######################################
@@ -273,9 +202,10 @@ class fetchPlayers(threading.Thread):
 							if playerInMemory['kickStatus'] == True:
 								if playerInMemory['kickTime'] == 0:
 									self.rcon.sendChatPrivateByID(playerInMemory['profile']['slot'],playerInMemory['kickReason'])
-									playerInMemory['kickTime'] = toolConfig['kickSystem']['kickDelay']
+									playerInMemory['kickTime'] = int(toolConfig['kickSystem']['kickDelay'])
 								elif playerInMemory['kickTime'] == 1:
-									self.rcon.kickPlayerInstant(playerInMemory['profile']['slot'])
+									pass
+									#self.rcon.kickPlayerInstant(playerInMemory['profile']['slot'])
 								else:
 									playerInMemory['kickTime'] += -1
 
@@ -310,33 +240,80 @@ class fetchPlayers(threading.Thread):
 							######################################
 							if util.convertToBool(player[4]):
 								if playerInMemory['time']['connectedLastCycle'] == False:
-									##
-									# Player finished loading...
-									##
+									if "US" in player[34]:
+										playerInMemory['game']['team'] = "US"
+									else:
+										playerInMemory['game']['team'] = "RU"
+									if "Assault" in player[34]:
+										playerInMemory['profile']['class'] = "Assault"
+									elif "Recon" in player[34]:
+										playerInMemory['profile']['class'] = "Recon"
+									elif "Medic" in player[34]:
+										playerInMemory['profile']['class'] = "Medic"
+									elif "Engineer" in player[34]:
+										playerInMemory['profile']['class'] = "Engineer"
+									else:
+										playerInMemory['profile']['class'] = "Unknown"
+									if playerInMemory['game']['deaths'] > 0:
+										playerInMemory['game']['KD'] = round(playerInMemory['game']['kills']/playerInMemory['game']['deaths'],2)
+									else:
+										playerInMemory['game']['KD'] = str(playerInMemory['game']['kills'])+".00"
 									self.onPlayerFinishedLoading(playerInMemory)
 
 
 									playerInMemory['time']['connectedLastCycle'] =  True
 								playerInMemory['time']['connected'] =  True
+								if int(time.time()) % int(toolConfig['statsMessageFrequency']) == 0:
+									self.rcon.sendChatPrivateByID(playerInMemory['profile']['slot'],self.replaceWithToolVars(playerInMemory,str(toolConfig['statsMessage'])))	
 							
-							currentFetched[playerInMemory['profile']['profileID']] = playerInMemory
+							######################################
+							# Detect if loadout was just fetched #
+							######################################
+							if  playerInMemory['checkMe'] == True:
+								
+
+								playerInMemory['checkMe'] = False
+
+							currentFetched[int(playerInMemory['profile']['profileID'])] = playerInMemory
 
 
 
 									
 
 
-
-
 			for player in currentFetched.keys():
-				if currentFetched[player]['time']['updated'] < self.referenceTime:
-					##
-					# Do something when player leaves here.
-					##
+				
+				if currentFetched[int(player)]['time']['updated'] < self.referenceTime:
+
 					self.onPlayerDisconnect(currentFetched[player])
-					del currentFetched[player]
-			print(time.clock() - startTime)
+					del currentFetched[int(player)]
+			#print(time.clock() - startTime)
+			
+
 			time.sleep(1)
+class fetchPlayerData(threading.Thread):
+	def __init__(self,profileID,nucleusID): 
+		threading.Thread.__init__(self) 
+		self.profileID = profileID
+		self.nucleusID = nucleusID
+	def getJson(self,url):
+		response = urllib.urlopen(url);
+		return json.loads(response.read())
+
+	def run(self):
+		tempLoadout = self.getJson("http://battlefield.play4free.com/en/profile/loadout/"+str(self.profileID)+"/"+str(self.nucleusID))
+		tempLoadout = tempLoadout['data']
+   		currentFetched[self.profileID]['loadout']['weapons'] = tempLoadout['equipment']
+   		currentFetched[self.profileID]['loadout']['apparel'] = tempLoadout['apparel']
+
+   		soldiers = self.getJson("http://battlefield.play4free.com/en/profile/soldiers/"+str(self.profileID))['data']
+   		for soldier in soldiers: 
+   			if int(soldier['id']) == int(self.nucleusID): 
+				currentFetched[int(self.profileID)]['isMain'] = soldier['isMain']
+				currentFetched[int(self.profileID)]['level']  = soldier['level']
+				currentFetched[int(self.profileID)]['mugShot'] = soldier['mugShot']
+				currentFetched[int(self.profileID)]['xpForNextLevel'] = soldier['xpForNextLevel']
+		currentFetched[self.profileID]['checkMe'] = True
 playerWatcher = fetchPlayers()
 playerWatcher.setDaemon(True)
 playerWatcher.start()

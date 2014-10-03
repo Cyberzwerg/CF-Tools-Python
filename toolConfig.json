@@ -1,0 +1,125 @@
+{
+   "server1":{
+      "connectionInfo":{
+         "IP":"RCONIP",
+         "PORT":"PORT",
+         "PASSWORD":"PASSWORD"
+      },
+      "maxPing":"250",
+      "vipProtections":{
+         "levelLimiter":false,
+         "preboughtAttachments":false,
+         "forbiddenAttachments":false,
+         "forbiddenWeapons":false,
+         "preboughtWeapons":false,
+         "pingLimiter":false,
+         "classLimiter":false
+      },
+      "joinMessage":" |ccc| %NAME% |ccc| , welcome on |ccc| %SERVERNAME%|ccc| ! Please read the rules",
+      "statsMessage":"Hello %TAGS% |ccc| %NAME%  |ccc|  Kills |ccc| %KILLS% |ccc| Deaths |ccc| %DEATHS% |ccc|  Your K/D Ratio |ccc| %KD% |ccc|  Ping: |ccc| %PINGAVG% |ccc| Have fun playing!",
+      "statsMessageFrequency": "30",
+      "ingameCmds":{
+         "test":{
+            "action":"sayPrivate",
+            "requiredRights":"50",
+            "text":"Some defined text 2"
+         },
+         "b":{
+            "action":"banPlayer",
+            "requiredRights":"50",
+            "text":"Some defined text 2"
+         },
+         "ping":{
+            "action":"printPing",
+            "requiredRights":"0"
+         },
+         "k":{
+            "action":"kickPlayer",
+            "requiredRights":"50"
+         },
+         "tomato":{
+            "action":"sayPublic",
+            "requiredRights":"50",
+            "text":"######################"
+         }
+      },
+      "clanTagDetection": [
+         ["(",")"],
+         ["[","]"],
+         ["-","-"],
+         ["{","}"],
+         ["=","="]
+      ],
+      "ingameRights":{
+         "admin":{
+            "tag":"ADM",
+            "rights":"60",
+            "members":[
+               "2851071969",
+               "000000"
+            ]
+         },
+         "moderator":{
+            "tag":"MOD",
+            "rights":"30",
+            "members":[
+               "000000",
+               "000000"
+            ]
+         },
+         "customRank":{
+            "tag":"CUS",
+            "rights":"10",
+            "members":[
+               "000000",
+               "000000"
+            ]
+         }
+      },
+      "kickSystem":{
+         "kickDelay":"3"
+      },
+      "classLimiter":{
+         "current":{
+            "US":{
+               "Recon":[
+
+               ],
+               "Assault":[
+
+               ],
+               "Engineer":[
+
+               ],
+               "Medic":[
+
+               ]
+            },
+            "RU":{
+               "Recon":[
+
+               ],
+               "Assault":[
+
+               ],
+               "Engineer":[
+
+               ],
+               "Medic":[
+
+               ]
+            }
+         },
+         "max":{
+            "Recon": "16",
+            "Assault":"16",
+            "Engineer":"16",
+            "Medic":"16"
+         }
+      },
+      "levelLimiter":{
+         "maxLevel":"30",
+         "minLevel":"-1"
+      }
+   }
+}

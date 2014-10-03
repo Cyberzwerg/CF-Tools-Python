@@ -34,18 +34,19 @@ class RCON:
 	def __init__(self,connectionInfo): 
 		self.connectionInfo = connectionInfo
 
-		#Initial Connect.
+		print "Initial Connect."
 		self.connect()
 	def connect(self):
 
 		#Create a socket
 		self.socket = socket.socket()
-
 		#Connect to server
 		try:
-			self.socket.connect((self.connectionInfo['ip'],self.connectionInfo['port']))
+
+			self.socket.connect((str(self.connectionInfo['IP']),int(self.connectionInfo['PORT'])))
+
 		except:
-			#Connection failed! Port or IP Wrong.
+			print "Connection failed! Port or IP Wrong."
 			time.sleep(2)
 
 			#Re-Trying
@@ -55,7 +56,7 @@ class RCON:
 
 		#Set timeout of socket. This is used to prevent the program from getting stuck when server is responding with nothing
 
-		self.socket.settimeout(0.2)
+		self.socket.settimeout(2)
 		
 		try:
 			#Get the welcome message
@@ -66,7 +67,7 @@ class RCON:
 
 			#Hash seed+password using md5
 
-			digestedPassword = hashlib.md5(seed+self.connectionInfo['password']).hexdigest()
+			digestedPassword = hashlib.md5(seed+self.connectionInfo['PASSWORD']).hexdigest()
 
 			#Send login cmd
 
@@ -94,7 +95,8 @@ class RCON:
 
 			self.connect()
 		#At this point RCON is ready.
-		print "Connected to "+self.connectionInfo['ip']+":"+str(self.connectionInfo['port'])+" RCON version "+self.rconVersion+" ready"
+		self.serverName = self.getServerDetails()['server']['name']
+		print "Connected to "+self.connectionInfo['IP']+":"+str(self.connectionInfo['PORT'])+" RCON version "+self.rconVersion+" ready"
 	##########################################
 	#Main Query method
 	##########################################
@@ -220,11 +222,17 @@ class RCON:
 		return self.query('exec game.sayAll " |ccc| '+message+'"')
 	#Send private Chat by slot.
 	def sendChatPrivateByID(self,slot,message):
-		return self.query('exec game.sayToPlayerWithId '+str(slot)+' \" |ccc| '+str(message)+'\"',1024,0)
+		if "\n" in message:
+			for split in message.split("\n"):
+				self.query('exec game.sayToPlayerWithId '+str(slot)+' \"'+str(split)+'\"',1024,0)
+			return True
+		else:
+			return self.query('exec game.sayToPlayerWithId '+str(slot)+' \"'+str(message)+'\"',1024,0)
+		 
 	
 	#Kick player instantly
 	def kickPlayerInstant(self,slot):
-		return self.query('exec admin.kickPlayer '+slot)
+		return self.query('exec admin.kickPlayer '+str(slot))
 	#Send a message to one team
 	def sendTeamChat(self,team,message):
 		return self.query('exec game.sayTeam '+team+' '+message)
@@ -232,6 +240,7 @@ class RCON:
 	####################
 	##UTILITLY METHODS##
 	####################
+
 	#Get banner url
 	def getBannerUrl(self):
 		return self.query('exec sv.bannerURL')
@@ -264,6 +273,7 @@ class RCON:
 	####################
 	##  MAP ROTATION  ##
 	####################
+
 	# Restart current Map
 	def restartMap(self):
 		return self.query("exec admin.restartMap")
