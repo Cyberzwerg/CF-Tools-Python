@@ -64,6 +64,8 @@ class fetchPlayers(threading.Thread):
 
 		self.levelLimiter = limiters.levelLimiter(toolConfig['levelLimiter'],toolConfig['vipProtections']['levelLimiter'])
 
+		self.weaponLimiter = limiters.weaponLimiter(toolConfig['weaponLimiter'],toolConfig['vipProtections']['weaponLimiter'])
+
 	###############################
 	#  PLAYER UTILITY FUNCTIONS   #
 	###############################
@@ -99,6 +101,7 @@ class fetchPlayers(threading.Thread):
 		self.classLimiter.removePlayer(player)
 		
 	def onLoadoutReceived(self,player):
+		self.weaponLimiter.checkPlayer(player)
 		pass
 	def onPlayerFinishedLoading(self,player):
 		self.classLimiter.checkPlayer(player)
@@ -204,8 +207,7 @@ class fetchPlayers(threading.Thread):
 									self.rcon.sendChatPrivateByID(playerInMemory['profile']['slot'],playerInMemory['kickReason'])
 									playerInMemory['kickTime'] = int(toolConfig['kickSystem']['kickDelay'])
 								elif playerInMemory['kickTime'] == 1:
-									pass
-									#self.rcon.kickPlayerInstant(playerInMemory['profile']['slot'])
+									self.rcon.kickPlayerInstant(playerInMemory['profile']['slot'])
 								else:
 									playerInMemory['kickTime'] += -1
 
@@ -271,7 +273,7 @@ class fetchPlayers(threading.Thread):
 							######################################
 							if  playerInMemory['checkMe'] == True:
 								
-
+								self.onLoadoutReceived(playerInMemory)
 								playerInMemory['checkMe'] = False
 
 							currentFetched[int(playerInMemory['profile']['profileID'])] = playerInMemory

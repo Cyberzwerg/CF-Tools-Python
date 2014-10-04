@@ -76,7 +76,7 @@ class RCON:
 			#Chekc if response contains key-word "ready"
 			if not "ready" in self.socket.recv(1024):
 
-				#Password is wrong!
+				print "Password is wrong!"
 
 				#Closing socket
 				self.socket.close()
@@ -86,7 +86,7 @@ class RCON:
 				#Starting over.
 				self.connect()
 		except:
-			#Connection failed
+			print "Connection failed"
 
 			#Sleep 2 seconds
 			time.sleep(2)
