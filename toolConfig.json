@@ -23,7 +23,7 @@
          "weapons": {
             "0000": {
                "forbidden": false,
-               "prebuy": false,
+               "prebuy": false
 
             }
          }
