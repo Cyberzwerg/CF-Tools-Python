@@ -8,10 +8,7 @@
       "maxPing":"250",
       "vipProtections":{
          "levelLimiter":false,
-         "preboughtAttachments":false,
-         "forbiddenAttachments":false,
-         "forbiddenWeapons":false,
-         "preboughtWeapons":false,
+         "weaponLimiter": false,
          "pingLimiter":false,
          "classLimiter":false
       },
