@@ -27,7 +27,7 @@
 
             }
          }
-      }
+      },
       "ingameCmds":{
          "test":{
             "action":"sayPrivate",
