@@ -18,6 +18,16 @@
       "joinMessage":" |ccc| %NAME% |ccc| , welcome on |ccc| %SERVERNAME%|ccc| ! Please read the rules",
       "statsMessage":"Hello %TAGS% |ccc| %NAME%  |ccc|  Kills |ccc| %KILLS% |ccc| Deaths |ccc| %DEATHS% |ccc|  Your K/D Ratio |ccc| %KD% |ccc|  Ping: |ccc| %PINGAVG% |ccc| Have fun playing!",
       "statsMessageFrequency": "30",
+      "weaponLimiter": {
+         "prebuyTolerance": 0,
+         "weapons": {
+            "0000": {
+               "forbidden": false,
+               "prebuy": false,
+
+            }
+         }
+      }
       "ingameCmds":{
          "test":{
             "action":"sayPrivate",
