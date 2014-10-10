@@ -22,14 +22,6 @@ import socket,hashlib,sys,time,datetime
 #	RCON CLASS VERSION 0.0.2
 ###
 
-# CONNECTION INFO IS A DICTIONARY WITH THE FOLLOWING STRUCTURE:
-	#{
-	#	'ip': "00.000.00.00", # RCON IP
-	#	'port': 0000, ### RCON PORT
-	#	'password': 'RCON PASSWORD', 
-	#	'serverName': "SOME SERVER NAME"  ### THIS CAN BE ANYTHING 
-	#}
-
 class RCON:
 	def __init__(self,connectionInfo): 
 		self.connectionInfo = connectionInfo
@@ -46,7 +38,7 @@ class RCON:
 			self.socket.connect((str(self.connectionInfo['IP']),int(self.connectionInfo['PORT'])))
 
 		except:
-			print "Connection failed! Port or IP Wrong."
+			raise error("Connection failed! Please check your IP/PORT")
 			time.sleep(2)
 
 			#Re-Trying
@@ -76,7 +68,7 @@ class RCON:
 			#Chekc if response contains key-word "ready"
 			if not "ready" in self.socket.recv(1024):
 
-				print "Password is wrong!"
+				raise error("Authentication failed! Please check your RCON Password.")
 
 				#Closing socket
 				self.socket.close()
@@ -86,7 +78,7 @@ class RCON:
 				#Starting over.
 				self.connect()
 		except:
-			print "Connection failed"
+			raise error("Connection failed! Please check your IP/PORT")
 
 			#Sleep 2 seconds
 			time.sleep(2)
@@ -96,7 +88,6 @@ class RCON:
 			self.connect()
 		#At this point RCON is ready.
 		self.serverName = self.getServerDetails()['server']['name']
-		print "Connected to "+self.connectionInfo['IP']+":"+str(self.connectionInfo['PORT'])+" RCON version "+self.rconVersion+" ready"
 	##########################################
 	#Main Query method
 	##########################################
@@ -194,7 +185,6 @@ class RCON:
 			for vip in preVips:
 				vip =  vip.split("\t")
 				if len(vip) > 1:
-				 	print vip
 					name = vip[0]
 					profileKey = vip[1]
 					if mode == "profileKey":
@@ -321,6 +311,7 @@ class RCON:
 			if map['id'] == currentMapID:
 				return map
 	#Convert camelCase map model to p4f model
+
 	def convertCamelCaseToMap(self,map):
 		finalMap = {}
 		if "rush" in map:
@@ -350,7 +341,7 @@ class RCON:
 			else:
 				finalMap['map'] = "dalian"	
 		return finalMap			
-	# Convert ugly play4free map names to camelCase
+	# Convert ugly play4free map names to camelCase (camelCase rocks!!!)
 	def convertMapToCamelCase(self,map,mode):
 		
 		if "gpm_rush" in mode:

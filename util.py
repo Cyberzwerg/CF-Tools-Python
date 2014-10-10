@@ -14,6 +14,7 @@
 #     You should have received a copy of the GNU General Public License along
 #     with this program; if not, write to the Free Software Foundation, Inc.,
 #     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import time
 def printA(text,style,newLine=False):
 	
 	if style == "pink":
@@ -32,7 +33,14 @@ def printA(text,style,newLine=False):
 		print finalText,
 	else:
 		print finalText
-
+def log(logType,info,configName):
+	finalText = ""
+		
+	finalText = "\t".join(str(x) for x in info)
+	path = configName+"/"+logType+".csv"
+	logFile = open(path, "a")
+	logFile.write(finalText)
+	logFile.close()
 def convertToBool(input):
 	if  int(input) >  0:
 		return True

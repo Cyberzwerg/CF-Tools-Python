@@ -1,5 +1,5 @@
 {
-   "server1":{
+   "default":{
       "connectionInfo":{
          "IP":"RCONIP",
          "PORT":"PORT",
@@ -10,18 +10,26 @@
          "levelLimiter":false,
          "weaponLimiter": false,
          "pingLimiter":false,
+         "nameFilter":false,
          "classLimiter":false
       },
+      "nameFilter": ["ForbiddenNamesGoHere"],
+      "bans": {
+         "2851071969": {
+            "reason": "Some reason!",
+            "expires": 1422955999,
+            "bannedBy": "CYBERZWERG"
+         }
+      },
       "joinMessage":" |ccc| %NAME% |ccc| , welcome on |ccc| %SERVERNAME%|ccc| ! Please read the rules",
-      "statsMessage":"Hello %TAGS% |ccc| %NAME%  |ccc|  Kills |ccc| %KILLS% |ccc| Deaths |ccc| %DEATHS% |ccc|  Your K/D Ratio |ccc| %KD% |ccc|  Ping: |ccc| %PINGAVG% |ccc| Have fun playing!",
-      "statsMessageFrequency": "30",
+      "statsMessage":" Hello %TAGS% |ccc| %NAME%  |ccc|  Kills |ccc| %KILLS% |ccc| Deaths |ccc| %DEATHS% |ccc| K/D Ratio |ccc| %KD% |ccc|  Ping: |ccc| %PINGAVG% |ccc| Have fun playing!",
+      "statsMessageFrequency": "20",
       "weaponLimiter": {
          "prebuyTolerance": 0,
          "weapons": {
             "0000": {
                "forbidden": false,
                "prebuy": false
-
             }
          }
       },
