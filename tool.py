@@ -23,6 +23,7 @@ import sys,os,time,threading,urllib,json
 import util 	# <---  UTIL MODULE
 import rcon 	# <---  RCON MODULE
 import limiters # <--- IMPORT CUSTOM LIMITERS
+import support  # <--- IMPORT SUPPORT MODULE
 
 #Instantiate globals 
 global toolConfig,currentFetched,toBeFetched,chatBuffer,adminChatBuffer,configName
@@ -91,7 +92,7 @@ class fetchPlayers(threading.Thread):
 		#RCON Instance for this thread
 		self.rcon = rcon.RCON(toolConfig["connectionInfo"])
 
-		self.Support = rcon.Support()
+		self.Support = support.Support()
 		
 		#Running property will determine if thread keeps running
 		self.running = True
