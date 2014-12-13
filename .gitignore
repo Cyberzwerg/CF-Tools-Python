@@ -45,4 +45,5 @@ Temporary Items
 .apdisk
 
 util.pyc
+test.pyc
 *.pyc

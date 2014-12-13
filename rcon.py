@@ -37,7 +37,7 @@ class RCON:
 		try:
 			self.socket.connect((str(self.connectionInfo['IP']),int(self.connectionInfo['PORT'])))
 		except:
-			raise error("Connection failed! Please check your IP/PORT")
+			raise Exception("Connection failed! Please check your IP/PORT")
 			time.sleep(2)
 
 			#Re-Trying
@@ -68,7 +68,7 @@ class RCON:
 			#Chekc if response contains key-word "ready"
 			if not "ready" in self.socket.recv(1024):
 
-				raise error("Authentication failed! Please check your RCON Password.")
+				raise Exception("Authentication failed! Please check your RCON Password.")
 
 				#Closing socket
 				self.socket.close()
@@ -78,7 +78,7 @@ class RCON:
 				#Starting over.
 				self.connect()
 		except:
-			raise error("Connection failed! Please check your IP/PORT")
+			raise Exception("Connection failed! Please check your IP/PORT")
 
 			#Sleep 2 seconds
 			time.sleep(2)
@@ -109,12 +109,204 @@ class RCON:
 			return False
 		return response 
 
+	def convertToBool(self,value):
+		if int(value) > 0:
+			return True
+		else:
+			return False
 	##########################################
 	#Get players
 	##########################################
 
 	def getPlayers(self):
-		return self.query("bf2cc pl")
+		
+		#Get players
+		prePlayers = self.query("bf2cc pl")
+		returnPlayers = []
+		#Check if server is empty
+
+		if prePlayers != False:
+			
+			#Split into players
+			prePlayers = prePlayers.split("\r")
+
+			#Iterate over players
+			for player in prePlayers:
+
+				#Split up the player itself
+				player = player.split("\t")
+
+				#Check if player is "valid" (48 attributes)
+				if len(player) == 48:
+
+
+					'''
+
+					DETERMINE PLAYER CLASS
+
+					'''
+					#Possible classes
+					possibleClasses = ["Assault","Recon","Medic","Engineer"]
+
+					#Set default class to "Unknown"
+					className = "Loading"
+
+					#Iterate over possible classes
+					for possbileClass in  possibleClasses:
+
+						#Check class is in current Kit
+						if possbileClass in player[34]:
+								
+							className = possbileClass
+
+
+					'''
+
+					DETERMINE TEAM
+
+					'''
+
+					#Possible team names
+					teamNames = ["US","RU"]
+
+					# Default team-name
+					currentTeam = "N/A"
+
+					#Iterate over possible team names
+					for teamName in  teamNames:
+
+						#Check if team name is in current kit
+						if teamName in player[34]:
+
+							currentTeam = teamName
+
+					'''
+
+					DETERMINE CLAN TAG
+
+					'''
+
+					#Possible clan tags 
+					clanTags  = [
+
+				         ["(",")"],
+				         ["[","]"],
+				         ["-","-"],
+				         ["{","}"],
+				         ["=","="],
+				         ["_=","=_"],
+				         ["-=","=-"],
+				         ["-=","=-"]
+
+				    ]
+
+				    #Iterate over clanTags
+					resultClanName = ""
+					for clanTag in clanTags:
+
+						#
+						if player[1].startswith(clanTag[0]):
+
+							#Check if first letter of name is the clantags beginning
+							clanTagExplode = player[1].split(clanTag[0])
+							#Split ip up
+							clanName = clanTagExplode[1].split(clanTag[1])[0]
+							#Split up by end of clantag
+							if len(clanName) < 5:
+
+								#Check if clanName is longer than 5 ( Names like [SomebodyWithAName] will not be detected)
+								resultClanName = clanName
+
+							else:
+								
+								#No clan is defined
+								resultClanName = ""
+
+					'''
+
+					DETERMINE WHETHER PLAYER IS VIP
+
+					'''
+					if player[35] == "0":
+
+						#Player is not VIP
+						vip =  False
+
+					else:
+						
+						#Player is VIP
+						vip = True
+
+
+					'''
+					
+					DETERMINE K/D
+
+					'''
+					if int(player[36]) < 1:
+						kd = int(player[31])
+						flawLess = True
+					else:
+						kd = round(int(player[31])/int(player[36]),2)
+						flawLess = False
+					#Create temp dict.
+					tempPlayer = {
+
+							"profileID": int(player[47]),
+							"nucleusID": int(player[10]),
+
+							"cdKeyHash": str(player[42]),
+
+							"ping": int(player[3]),
+
+							"name": str(player[1]),
+							"slot": int(player[0]),
+
+							"rank": int(player[39]),
+							"class": className,
+							"clanTag": resultClanName,
+							"vip": self.convertToBool(player[47]),
+
+							"score": int(player[37]),
+
+							"kills": int(player[31]),
+							"deaths": int(player[36]),
+							"kd": kd,
+							"flawLess": flawLess,
+							"teamKills": int(player[32]),
+
+							"score": int(player[37]),
+
+							"idle": int(player[41]),
+							"connected": self.convertToBool(player[4]),
+
+							"flagCaps": int(player[25]),
+							"flagDefends": int(player[26]),
+							"flagAssists": int(player[27]),
+
+							"flagNeutralizes": int(player[28]),
+							"flagNeutralizeAssists": int(player[29]),
+
+
+							"assists": int(player[19]),
+							"revives": int(player[22]),
+							"team": currentTeam,
+
+							"alive": self.convertToBool(player[8]),
+							"manDown": self.convertToBool(player[9]),
+							"timeToSpawn": str(player[13]),
+
+							"damageAssists": int(player[19]),
+							"passengerAssists": int(player[20]),
+							"targetAssists": int(player[21]),
+
+
+
+					}
+					returnPlayers.append(tempPlayer)
+			return returnPlayers
+		else:
+			return returnPlayers
 	
 	##########################################
 	#Get server Details
@@ -169,7 +361,7 @@ class RCON:
 			message = message.split("\t")
 			thisMessage = {}
 			if len(message) == 6:
-				message = { 'slot': message[0].replace("\n",""), 'origin': message[1] , 'time': message[4].replace("[","").replace("]",""), 'message': message[1] }
+				message = { 'slot': int(message[0].replace("\n","")), 'origin': message[1] , 'time': message[4].replace("[","").replace("]",""), 'message': message[5].strip() }
 				if message['origin'] == "Admin":
 					finalChat['admin'].append(message)
 				else:
@@ -223,12 +415,8 @@ class RCON:
 	#  Send private Chat by slot #
 	##############################
 	def sendChatPrivateByID(self,slot,message):
-		if "\n" in message:
-			for split in message.split("\n"):
-				self.query('exec game.sayToPlayerWithId '+str(slot)+' \"'+str(split)+'\"',1024,0)
-			return True
-		else:
-			return self.query('exec game.sayToPlayerWithId '+str(slot)+' \"'+str(message)+'\"',1024,0)
+		print 'exec game.sayToPlayerWithId '+str(slot)+' \"'+str(message)+'\"'
+		self.query('exec game.sayToPlayerWithId '+str(slot)+' \"'+str(message)+'\"')
 		 
 	##############################
 	#  Kick player instantly  	 #
@@ -354,7 +542,7 @@ class RCON:
 				finalMapRotation.append({ "id": id , "mapName": mapName  , "size": size})
 
 		return finalMapRotation
-	
+
 	##############################
 	#Get current Map 			 #
 	##############################
